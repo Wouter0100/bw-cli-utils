@@ -16,4 +16,4 @@ The switch statement will just switch the `data.json` to a different file in the
 Use `bw-switch` without any arguments to get the current account. Provide a single argument (for example `account2`) to switch to that account.
 
 ## Move
-Call `bs-move account_from account_to item` to move an item between 2 accounts. The item should be any name, uniquely identifing an specific item.
+Call `bw-move <account_from> <account_to> <item>` to move an item between 2 accounts. The item should be any name, uniquely identifing an specific item.
