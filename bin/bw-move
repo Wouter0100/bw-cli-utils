@@ -1,0 +1,65 @@
+#!/bin/bash
+set -e
+
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
+[ "$#" -eq 3 ] || die "3 argument required (<from> <to> <item>), $# provided"
+
+CURRENT_PROFILE=$(bw-switch)
+
+function cleanup {
+    bw-switch "$CURRENT_PROFILE"
+}
+
+trap cleanup EXIT
+
+bw-switch "$1"
+
+echo "Enter master password for $1."
+
+FROM_BW_SESSION=$(bw unlock)
+
+bw sync --session $FROM_BW_SESSION > /dev/null
+
+bw-switch "$2"
+
+echo "Enter master password for $2."
+
+TO_BW_SESSION=$(bw unlock)
+
+bw sync --session $TO_BW_SESSION > /dev/null
+
+bw-switch "$1"
+
+ITEM=$(bw get item "$3" --session $FROM_BW_SESSION)
+
+ITEM_ID=$(jq -r '.id' <<< "$ITEM")
+ITEM_NAME=$(jq -r '.name' <<< "$ITEM")
+ITEM_USERNAME=$(jq -r '.login.username' <<< "$ITEM")
+
+read -p "Do you want to move $ITEM_NAME ($ITEM_USERNAME) from $1 to $2 (y/N) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+
+bw-switch "$2"
+
+ENCODED_ITEM=$(bw encode --session $TO_BW_SESSION <<< "$ITEM")
+
+bw create item $ENCODED_ITEM --session $TO_BW_SESSION > /dev/null
+
+bw sync --session $TO_BW_SESSION > /dev/null
+
+bw-switch "$1"
+
+bw delete item $ITEM_ID --session $FROM_BW_SESSION > /dev/null
+
+bw sync --session $FROM_BW_SESSION > /dev/null
+
+bw-switch "$CURRENT_PROFILE"
+

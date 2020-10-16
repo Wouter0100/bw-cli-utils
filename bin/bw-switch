@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    CURRENT=$(readlink -f "$HOME/.config/Bitwarden CLI/data.json")
+    CURRENT=${CURRENT##*/}
+    echo "${CURRENT%.*}"
+    exit 0
+fi
+
+FROM="$HOME/.config/Bitwarden CLI/$1.json"
+
+if [ ! -f "$FROM" ]; then
+    echo "$FROM does not exist."
+    exit 1
+fi
+
+ln -fs "$FROM" "$HOME/.config/Bitwarden CLI/data.json"
